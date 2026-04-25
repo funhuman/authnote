@@ -39,7 +39,7 @@
               账户凭证管理：{{ currentAccountName }}
             </h3>
 
-            <el-form :model="recordForm" label-width="80px" class="max-w-lg mb-6">
+            <el-form :model="recordForm" label-width="80px" class="max-w-lg mb-6" >
               <el-form-item label="账户简码">
                 <el-input v-model="recordForm.accountCode" placeholder="输入账户简码"
                   @blur="getAccountByCode(recordForm.accountCode)" />
@@ -58,8 +58,8 @@
               </el-form-item>
               <el-form-item label="值">
                 <el-input v-model="recordForm.value"
-                  :type="recordForm.isEncrypt && !recordForm.isTotp ? 'password' : ''"
-                  :show-password="recordForm.isEncrypt && !recordForm.isTotp" placeholder="输入内容" />
+                  :type="recordForm.isEncrypt ? 'password' : ''"
+                  :show-password="recordForm.isEncrypt" placeholder="输入内容" />
               </el-form-item>
               <el-form-item label="时间">
                 <el-date-picker v-model="recordForm.time" type="datetime" format="YYYY-MM-DD HH:mm"
@@ -244,7 +244,7 @@ const beforeValueProcess = (beforeValue, isEncrypt) => {
 const commonCategoryNames = ref(['',])
 const commonItemNames = ref(['登录账号', '登录密码',])
 
-const api = axios.create({ baseURL: `${window.location.protocol}//${window.location.hostname}:62823/api` })
+const api = axios.create({ baseURL: `${window.location.protocol}//${window.location.hostname}:62083/api` })
 api.interceptors.response.use(res => res.data, err => { ElMessage.error('请求失败'); return Promise.reject(err) })
 
 const encryptKey = '123456789abcdefg'
@@ -326,10 +326,8 @@ async function editRecord(mode) {
     const data = {
       accountId: recordForm.value.accountId,
       key: recordForm.value.key,
-      beforeValue: beforeValueProcess(recordForm.value.beforeValue, recordForm.value.isEncrypt && !recordForm.value.isTotp),
-      value: recordForm.value.isTotp
-        ? recordForm.value.value
-        : (recordForm.value.isEncrypt ? encryptDekEcb(recordForm.value.value) : recordForm.value.value),
+      beforeValue: beforeValueProcess(recordForm.value.beforeValue, recordForm.value.isEncrypt),
+      value: recordForm.value.isEncrypt ? encryptDekEcb(recordForm.value.value) : recordForm.value.value,
       time: datetimeFormatISO(recordForm.value.time),
       isEncrypt: recordForm.value.isEncrypt,
       isTotp: recordForm.value.isTotp,
@@ -375,7 +373,7 @@ function getAccountByCode(code) {
 // 生成 TOTP 验证码
 function generateTOTP(secret) {
   try {
-    const totp = jsotp.TOTP(secret);
+    const totp = jsotp.TOTP(secret); 
     const code = totp.now();
     const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
     return { code, remaining };
@@ -391,12 +389,9 @@ function refreshAllTotps() {
     if (!acc.authRecords) continue;
     for (const item of acc.authRecords) {
       if (!item.isTotp) continue;
-
       try {
         // 自动解密（你之前加密过）
         let realSecret = item.value;
-        try { realSecret = decryptDekEcb(item.value); } catch { }
-
         const res = generateTOTP(realSecret);
         item.totpCode = res.code;
         item.totpRemaining = res.remaining;

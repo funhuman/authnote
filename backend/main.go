@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -76,11 +75,11 @@ func initDB() {
 	var err error
 
 	// 从环境变量读取数据库配置
-	dbUser := os.Getenv("MANAGE_TEMPLATE_DB_USER")
-	dbPassword := os.Getenv("MANAGE_TEMPLATE_DB_PASSWORD")
-	dbHost := os.Getenv("MANAGE_TEMPLATE_DB_HOST")
-	dbPort := os.Getenv("MANAGE_TEMPLATE_DB_PORT")
-	dbName := os.Getenv("MANAGE_TEMPLATE_DB_NAME")
+	dbUser := os.Getenv("AUTHNOTE_DB_USER")
+	dbPassword := os.Getenv("AUTHNOTE_DB_PASSWORD")
+	dbHost := os.Getenv("AUTHNOTE_DB_HOST")
+	dbPort := os.Getenv("AUTHNOTE_DB_PORT")
+	dbName := os.Getenv("AUTHNOTE_DB_NAME")
 
 	// MySQL 连接字符串 格式：用户名:密码@tcp(IP:端口)/数据库名?charset=utf8mb4&parseTime=True&loc=Local
 	dsn := fmt.Sprintf(
@@ -499,9 +498,5 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"records": list})
 	})
 
-	port := os.Getenv("MANAGE_TEMPLATE_PORT")
-	if strings.TrimSpace(port) == "" {
-		port = "60011"
-	}
-	_ = r.Run(":" + port)
+	_ = r.Run(":" + os.Getenv("AUTHNOTE_PORT"))
 }
